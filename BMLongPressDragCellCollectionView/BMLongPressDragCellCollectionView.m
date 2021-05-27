@@ -47,6 +47,7 @@ typedef NS_ENUM(NSUInteger, BMLongPressDragCellCollectionViewScrollDirection) {
 @property (nonatomic, assign) BOOL    banReload; ///< 禁止刷新
 @property (nonatomic, assign) CGPoint oldPoint;  ///< 旧的位置
 @property (nonatomic, assign) CGPoint lastPoint; ///< 最后的触摸点
+@property (nonatomic, assign) CGPoint lastCellCenter;
 
 @end
 
@@ -553,12 +554,13 @@ typedef NS_ENUM(NSUInteger, BMLongPressDragCellCollectionViewScrollDirection) {
             cell.hidden = YES;
             
             // 获取当前触摸的中心点
-            CGPoint currentPoint = point;
+            self.lastCellCenter = cell.center;
+            _lastPoint = point;
             
             // 动画放大和移动到触摸点下面
             [UIView animateWithDuration:0.25 animations:^{
                 self.snapedView.transform = CGAffineTransformMakeScale(self.dragZoomScale, self.dragZoomScale);
-                self.snapedView.center = CGPointMake(currentPoint.x, currentPoint.y);
+                self.snapedView.center = self.lastCellCenter;
                 self.snapedView.alpha = self.dragCellAlpha;
             }];
         }
@@ -574,11 +576,19 @@ typedef NS_ENUM(NSUInteger, BMLongPressDragCellCollectionViewScrollDirection) {
                 [self.delegate dragCellCollectionView:self changedDragAtPoint:point];
             }
             // 当前手指位置
+            
+            
+            CGFloat x = self.lastCellCenter.x + (point.x - _lastPoint.x);
+            CGFloat y = self.lastCellCenter.y + (point.y - _lastPoint.y);
+            self.lastCellCenter = CGPointMake(x, y);
             _lastPoint = point;
+            
+            
             // 截图视图位置移动
             [UIView animateWithDuration:0.1 animations:^{
-                self.snapedView.center = self.lastPoint;
+                self.snapedView.center = self.lastCellCenter;
             }];
+            
             
             NSIndexPath *index1 = [self _getChangedNullIndexPath];
             NSIndexPath *index = nil;
